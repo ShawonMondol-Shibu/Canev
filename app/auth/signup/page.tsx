@@ -4,38 +4,37 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { User, Mail, Image as ImageIcon, Lock, Eye, EyeOff } from "lucide-react"
+import Link from "next/link"
+import { User, Mail, Image as ImageIcon, Lock, Eye, EyeOff, Loader2 } from "lucide-react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { FieldGroup, Field, FieldLabel, FieldContent, FieldError } from "@/components/ui/field"
 import { Button } from "@/components/ui/button"
 import { InputGroup, InputGroupInput, InputGroupAddon, InputGroupButton } from "@/components/ui/input-group"
+import { authClient } from "@/lib/auth-client"
 
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.email("Enter a valid email address"),
+  email: z.string().email("Enter a valid email address"),
   image: z.instanceof(File).optional().or(z.undefined()),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
-}).refine((data) => {
-  if (data.password !== data.confirmPassword) {
-    return {
-      success: false,
-      error: new z.ZodError([
-        { code: "custom", path: ["confirmPassword"], message: "Passwords do not match" },
-      ]),
-    }
-  }
-  return { success: true }
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 })
 
 type SignupFormData = z.infer<typeof signupSchema>
 
 export default function SignupPage() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const {
     register,
@@ -53,8 +52,34 @@ export default function SignupPage() {
     },
   })
 
-  function onSubmit(data: SignupFormData) {
-    console.log(data)
+  async function onSubmit(data: SignupFormData) {
+    setError(null)
+    setLoading(true)
+
+    let imageBase64: string | undefined
+    if (data.image) {
+      imageBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(data.image!)
+      })
+    }
+
+    const { error: signupError } = await authClient.signUp.email({
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      image: imageBase64,
+      callbackURL: "/dashboard",
+    })
+
+    if (signupError) {
+      setError(signupError.message ?? signupError.statusText ?? "Something went wrong")
+      setLoading(false)
+      return
+    }
+
+    router.push("/dashboard")
   }
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -197,8 +222,14 @@ export default function SignupPage() {
             </FieldGroup>
           </CardContent>
           <CardFooter className="flex-col gap-3">
-            <Button type="submit" className="w-full">
-              Create account
+            {error && (
+              <div className="w-full rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                {error}
+              </div>
+            )}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? <Loader2 className="size-4 animate-spin" /> : null}
+              {loading ? "Creating account..." : "Create account"}
             </Button>
             <div className="relative flex items-center gap-3 self-stretch">
               <Separator className="flex-1" />
@@ -214,6 +245,12 @@ export default function SignupPage() {
               </svg>
               Continue with Google
             </Button>
+            <p className="text-xs text-muted-foreground">
+              Already have an account?{" "}
+              <Link href="/auth/login" className="font-medium text-primary hover:underline">
+                Sign in
+              </Link>
+            </p>
           </CardFooter>
         </form>
       </Card>

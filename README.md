@@ -1,41 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Canev - CollabBoard Frontend
+
+Kanban-style project management frontend built with **Next.js 16**, **React 19**, **@tanstack/react-query**, and **better-auth**.
+
+## Stack
+
+- **Framework:** [Next.js 16](https://nextjs.org) (App Router)
+- **Language:** TypeScript (strict)
+- **UI:** Tailwind CSS v4 + shadcn/ui
+- **State / Server Cache:** [@tanstack/react-query](https://tanstack.com/query) v5
+- **Drag & Drop:** [@dnd-kit](https://dndkit.com)
+- **Forms:** react-hook-form + zod
+- **Auth:** [better-auth](https://better-auth.com) (client SDK)
+- **Charts:** recharts
+- **Icons:** lucide-react
+- **Package Manager:** [Bun](https://bun.sh)
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Start the dev server:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+bun run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3001](http://localhost:3001) in your browser.
 
-## Learn More
+> The backend API runs on `http://localhost:3000`. Make sure it's running as well.
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/
+├── (website)/                      # Landing / marketing page
+├── auth/
+│   ├── login/page.tsx              # Sign-in form
+│   └── signup/page.tsx             # Sign-up form
+└── dashboard/
+    ├── page.tsx                    # Workspace grid
+    ├── profile/page.tsx            # User profile
+    ├── [workspaceId]/
+    │   ├── page.tsx                # Project list
+    │   ├── settings/page.tsx       # Workspace settings
+    │   └── [projectId]/
+    │       └── page.tsx            # Kanban board
+components/
+├── board/                          # Board, columns, cards, card modal
+├── dashboard/                      # Navbar, sidebar, workspace card
+└── ui/                             # shadcn/ui components
+hooks/
+├── use-user.ts                     # Auth session
+├── use-workspaces.ts               # Workspace CRUD via API
+├── use-projects.ts                 # Project CRUD via API
+└── use-board.ts                    # Board (lists + cards) via API
+lib/
+├── auth-client.ts                  # better-auth client config
+├── api.ts                          # Fetch wrapper for backend API
+├── types.ts                        # Shared TypeScript types
+├── mock-data.ts                    # Mock data (fallback/legacy)
+└── utils.ts                        # Utility functions
+provider/
+└── QueryProvider.tsx               # React Query provider
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Features
 
-## Deploy on Vercel
+- **Auth:** Email/password sign-up, sign-in, session management via better-auth
+- **Workspaces:** Create, list, view workspaces
+- **Projects:** Create, list, view projects within workspaces
+- **Board:** Kanban board with drag-and-drop lists and cards
+- **Cards:** Create, move between lists, update, delete
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API Endpoints
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# Canev
-# Canev
-# Canev
-# Canev
-# Canev
+The frontend connects to `http://localhost:3000` — see the backend README for the full API reference.
+
+| Method | Path | Hook |
+|--------|------|------|
+| `POST` | `/workspaces` | `useCreateWorkspace` |
+| `GET` | `/workspaces?userId=` | `useWorkspaces` |
+| `GET` | `/workspaces/:id?userId=` | `useWorkspace` |
+| `DELETE` | `/workspaces/:id?userId=` | `useDeleteWorkspace` |
+| `POST` | `/projects` | `useCreateProject` |
+| `GET` | `/projects?workspaceId=` | `useProjects` |
+| `DELETE` | `/projects/:id?workspaceId=` | `useDeleteProject` |
+| `POST` | `/lists` | `useCreateList` |
+| `GET` | `/lists?projectId=` | `useBoard` |
+| `PUT` | `/lists/:id?projectId=` | `useReorderLists` |
+| `POST` | `/cards` | `useCreateCard` |
+| `GET` | `/cards?listId=` | `useBoard` |
+| `PUT` | `/cards/:id` | `useMoveCard`, `useUpdateCard` |
+| `DELETE` | `/cards/:id` | `useDeleteCard` |
+| `POST` | `/workspace-members` | via `useWorkspace` |
+| `GET` | `/workspace-members?workspaceId=` | via `useWorkspace` |
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `bun run dev` | Start Next.js dev server |
+| `bun run build` | Build for production |
+| `bun run start` | Start production server |
+| `bun run lint` | Run ESLint |

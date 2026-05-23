@@ -11,6 +11,7 @@ import { FieldGroup, Field, FieldLabel, FieldContent, FieldError } from "@/compo
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupInput, InputGroupAddon, InputGroupButton } from "@/components/ui/input-group"
 import { Button } from "@/components/ui/button"
+import { authClient } from "@/lib/auth-client"
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email address"),
@@ -31,8 +32,14 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "" },
   })
 
-  function onSubmit(data: LoginFormData) {
-    console.log(data)
+  async function onSubmit(data: LoginFormData) {
+    await authClient.signIn.email({
+      email: data.email,
+      password: data.password,
+      callbackURL: "/dashboard",
+      
+    })
+    
   }
 
   return (
