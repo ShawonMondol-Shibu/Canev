@@ -129,7 +129,7 @@ export function useReorderLists() {
       if (data.listIds) {
         await Promise.all(
           data.listIds.map((id, i) =>
-            api.put(`/lists/${id}?projectId=${data.projectId}`, { position: i }),
+            api.put(`/lists/${id}`, { position: i }),
           ),
         )
       }

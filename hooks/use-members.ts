@@ -81,8 +81,7 @@ export function useUpdateWorkspace() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (data: { workspaceId: string; name?: string; description?: string | null }) => {
-      const userId = await getUserId()
-      return api.put<ApiWorkspace>(`/workspaces/${data.workspaceId}?userId=${userId}`, {
+          return api.put<ApiWorkspace>(`/workspaces/${data.workspaceId}`, {
         name: data.name,
         description: data.description,
       })
@@ -103,10 +102,4 @@ interface ApiWorkspace {
   createdAt: string
   updatedAt: string
   deletedAt: string | null
-}
-
-async function getUserId(): Promise<string> {
-  const { authClient } = await import("@/lib/auth-client")
-  const session = await authClient.getSession()
-  return session?.data?.user?.id || ""
 }
