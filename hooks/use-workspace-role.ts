@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { useUser } from "./use-user"
-import { useWorkspaceMembers } from "./use-members"
+import { useWorkspace } from "./use-workspaces"
 
 export type WorkspaceRole = "owner" | "admin" | "member" | "viewer"
 
@@ -15,15 +15,20 @@ const ROLE_HIERARCHY: Record<WorkspaceRole, number> = {
 
 export function useWorkspaceRole(workspaceId: string) {
   const { user, isPending: userLoading } = useUser()
-  const { data: members, isLoading: membersLoading } = useWorkspaceMembers(workspaceId)
+  const { data: workspace, isLoading: wsLoading } = useWorkspace(workspaceId)
 
   const role = useMemo(() => {
-    if (!user?.id || !members) return null
-    const member = members.find((m) => m.userId === user.id)
-    return member?.role ?? null
-  }, [user?.id, members])
+    if (!user?.id || !workspace) return null
 
-  return { role, isLoading: userLoading || membersLoading }
+    const member = workspace.members.find((m) => m.userId === user.id)
+    if (member?.role) return member.role
+
+    if (workspace.ownerId === user.id) return "owner"
+
+    return null
+  }, [user?.id, workspace])
+
+  return { role, isLoading: userLoading || wsLoading }
 }
 
 export function useCanEdit(workspaceId: string): boolean {
