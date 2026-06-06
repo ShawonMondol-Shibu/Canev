@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { AvatarGroup } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { Can } from "@/components/shared/can"
 
 export default function WorkspacePage() {
   const params = useParams()
@@ -74,10 +75,12 @@ export default function WorkspacePage() {
               <p className="mt-1 text-sm text-muted-foreground">{workspace.description}</p>
             )}
           </div>
-          <Button onClick={() => setShowDialog(true)}>
-            <Plus className="mr-1.5 size-4" />
-            New Project
-          </Button>
+          <Can role="admin" workspaceId={workspaceId}>
+            <Button onClick={() => setShowDialog(true)}>
+              <Plus className="mr-1.5 size-4" />
+              New Project
+            </Button>
+          </Can>
         </div>
 
         {projLoading ? (
@@ -98,16 +101,18 @@ export default function WorkspacePage() {
                   <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <FolderKanban className="size-5" />
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted">
-                      <MoreHorizontal className="size-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem>Rename</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Can role="admin" workspaceId={workspaceId}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted">
+                        <MoreHorizontal className="size-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem>Rename</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </Can>
                 </div>
                 <h3 className="mt-4 font-semibold">{project.name}</h3>
                 {project.description && (
@@ -130,10 +135,12 @@ export default function WorkspacePage() {
             <p className="mt-1 text-sm text-muted-foreground">
               Create your first project in this workspace
             </p>
-            <Button className="mt-4" onClick={() => setShowDialog(true)}>
-              <Plus className="mr-1.5 size-4" />
-              Create Project
-            </Button>
+            <Can role="admin" workspaceId={workspaceId}>
+              <Button className="mt-4" onClick={() => setShowDialog(true)}>
+                <Plus className="mr-1.5 size-4" />
+                Create Project
+              </Button>
+            </Can>
           </div>
         )}
       </div>

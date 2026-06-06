@@ -11,19 +11,22 @@ import { cn } from "@/lib/utils"
 import { useComments, useCreateComment, useDeleteComment } from "@/hooks/use-comments"
 import { useAttachments } from "@/hooks/use-attachments"
 import { useCardLabels } from "@/hooks/use-card-labels"
+import { useCanEdit } from "@/hooks/use-workspace-role"
 
 interface CardModalProps {
   card: Card
   projectId: string
+  workspaceId: string
   onClose: () => void
   onUpdateCard: (data: Partial<Card> & { id: string }) => Promise<unknown>
   onDeleteCard: (cardId: string) => Promise<unknown>
 }
 
-export default function CardModal({ card, projectId: _projectId, onClose, onUpdateCard, onDeleteCard }: CardModalProps) {
+export default function CardModal({ card, projectId: _projectId, workspaceId, onClose, onUpdateCard, onDeleteCard }: CardModalProps) {
   const [editTitle, setEditTitle] = useState(card.title)
   const [editDescription, setEditDescription] = useState(card.description || "")
   const [newComment, setNewComment] = useState("")
+  const canEdit = useCanEdit(workspaceId)
 
   const { data: comments, isLoading: commentsLoading } = useComments(card.id)
   const { data: attachments } = useAttachments(card.id)
@@ -75,7 +78,8 @@ export default function CardModal({ card, projectId: _projectId, onClose, onUpda
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               onBlur={handleSaveTitle}
-              className="w-full text-xl font-semibold bg-transparent border-none outline-none"
+              readOnly={!canEdit}
+              className={cn("w-full text-xl font-semibold bg-transparent border-none outline-none", !canEdit && "cursor-default")}
             />
             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
               <span>in list</span>
@@ -101,8 +105,9 @@ export default function CardModal({ card, projectId: _projectId, onClose, onUpda
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
                 onBlur={handleSaveDescription}
-                placeholder="Add a more detailed description..."
-                className="w-full min-h-[100px] rounded-md border bg-transparent p-3 text-sm outline-none focus:border-primary"
+                readOnly={!canEdit}
+                placeholder={canEdit ? "Add a more detailed description..." : "No description"}
+                className={cn("w-full min-h-[100px] rounded-md border bg-transparent p-3 text-sm outline-none focus:border-primary", !canEdit && "cursor-default")}
                 rows={4}
               />
             </div>
@@ -112,26 +117,28 @@ export default function CardModal({ card, projectId: _projectId, onClose, onUpda
                 <MessageSquare className="size-4" />
                 Comments
               </div>
-              <div className="mb-3 flex gap-3">
-                <Avatar name="You" size="sm" />
-                <div className="flex flex-1 gap-2">
-                  <input
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="flex-1 rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault()
-                        handleAddComment()
-                      }
-                    }}
-                  />
-                  <Button size="sm" onClick={handleAddComment} disabled={!newComment.trim() || createComment.isPending}>
-                    Send
-                  </Button>
+              {canEdit && (
+                <div className="mb-3 flex gap-3">
+                  <Avatar name="You" size="sm" />
+                  <div className="flex flex-1 gap-2">
+                    <input
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Write a comment..."
+                      className="flex-1 rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault()
+                          handleAddComment()
+                        }
+                      }}
+                    />
+                    <Button size="sm" onClick={handleAddComment} disabled={!newComment.trim() || createComment.isPending}>
+                      Send
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
               {commentsLoading ? (
                 <p className="text-sm text-muted-foreground">Loading comments...</p>
               ) : comments && comments.length > 0 ? (
@@ -148,12 +155,14 @@ export default function CardModal({ card, projectId: _projectId, onClose, onUpda
                         </div>
                         <p className="mt-1 text-sm">{comment.content}</p>
                       </div>
-                      <button
-                        onClick={() => deleteComment.mutate({ commentId: comment.id, cardId: card.id })}
-                        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
-                      >
-                        <Trash2 className="size-3" />
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => deleteComment.mutate({ commentId: comment.id, cardId: card.id })}
+                          className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                        >
+                          <Trash2 className="size-3" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -211,13 +220,15 @@ export default function CardModal({ card, projectId: _projectId, onClose, onUpda
 
             <Separator />
 
-            <button
-              onClick={handleDelete}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
-            >
-              <Trash2 className="size-4" />
-              Delete
-            </button>
+            {canEdit && (
+              <button
+                onClick={handleDelete}
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+              >
+                <Trash2 className="size-4" />
+                Delete
+              </button>
+            )}
           </div>
         </div>
       </div>

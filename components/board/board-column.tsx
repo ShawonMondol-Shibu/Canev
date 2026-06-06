@@ -12,10 +12,12 @@ import { cn } from "@/lib/utils"
 interface BoardColumnProps {
   list: List
   projectId: string
+  workspaceId: string
+  canEdit: boolean
   onCardClick: (card: Card) => void
 }
 
-export default function BoardColumn({ list, projectId, onCardClick }: BoardColumnProps) {
+export default function BoardColumn({ list, projectId, workspaceId, canEdit, onCardClick }: BoardColumnProps) {
   const [showAddCard, setShowAddCard] = useState(false)
   const [cardTitle, setCardTitle] = useState("")
   const createCard = useCreateCard()
@@ -35,14 +37,16 @@ export default function BoardColumn({ list, projectId, onCardClick }: BoardColum
   return (
     <div className="flex w-72 shrink-0 flex-col rounded-lg bg-muted/50">
       <div className="flex items-center gap-2 px-3 py-3" ref={setNodeRef}>
-        <GripVertical className="size-3.5 shrink-0 text-muted-foreground/30 cursor-grab" />
+        {canEdit && <GripVertical className="size-3.5 shrink-0 text-muted-foreground/30 cursor-grab" />}
         <h3 className="text-sm font-semibold">{list.name}</h3>
         <span className="ml-auto flex size-5 items-center justify-center rounded-full bg-muted text-[11px] font-medium text-muted-foreground">
           {list.cards.length}
         </span>
-        <button className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted-foreground/10">
-          <MoreHorizontal className="size-4" />
-        </button>
+        {canEdit && (
+          <button className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted-foreground/10">
+            <MoreHorizontal className="size-4" />
+          </button>
+        )}
       </div>
 
       <div
@@ -96,7 +100,7 @@ export default function BoardColumn({ list, projectId, onCardClick }: BoardColum
               </button>
             </div>
           </div>
-        ) : (
+        ) : canEdit ? (
           <button
             onClick={() => setShowAddCard(true)}
             className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted-foreground/5 hover:text-foreground"
@@ -104,7 +108,7 @@ export default function BoardColumn({ list, projectId, onCardClick }: BoardColum
             <Plus className="size-3.5" />
             Add card
           </button>
-        )}
+        ) : null}
       </div>
     </div>
   )

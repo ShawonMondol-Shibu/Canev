@@ -24,12 +24,15 @@ import BoardCard from "./board-card"
 import CardModal from "./card-modal"
 import { Plus } from "lucide-react"
 import { useBoard, useCreateList, useMoveCard, useReorderLists, useDeleteCard, useUpdateCard } from "@/hooks/use-board"
+import { useCanEdit } from "@/hooks/use-workspace-role"
 
 interface BoardProps {
   projectId: string
+  workspaceId: string
 }
 
-export default function Board({ projectId }: BoardProps) {
+export default function Board({ projectId, workspaceId }: BoardProps) {
+  const canEdit = useCanEdit(workspaceId)
   const { data: lists, isLoading } = useBoard(projectId)
   const createList = useCreateList()
   const moveCard = useMoveCard()
@@ -142,12 +145,14 @@ export default function Board({ projectId }: BoardProps) {
                 key={list.id}
                 list={list}
                 projectId={projectId}
+                workspaceId={workspaceId}
                 onCardClick={setSelectedCard}
+                canEdit={canEdit}
               />
             ))}
           </SortableContext>
 
-          {showNewList ? (
+          {showNewList && canEdit ? (
             <div className="flex w-72 shrink-0 flex-col rounded-lg border bg-card p-3">
               <input
                 autoFocus
@@ -176,7 +181,7 @@ export default function Board({ projectId }: BoardProps) {
                 </button>
               </div>
             </div>
-          ) : (
+          ) : canEdit ? (
             <button
               onClick={() => setShowNewList(true)}
               className="flex w-72 shrink-0 items-start justify-center gap-2 rounded-lg border-2 border-dashed p-4 text-sm text-muted-foreground transition-colors hover:border-solid hover:border-primary/30 hover:text-foreground"
@@ -184,7 +189,7 @@ export default function Board({ projectId }: BoardProps) {
               <Plus className="size-4" />
               Add column
             </button>
-          )}
+          ) : null}
         </div>
 
         <DragOverlay>
@@ -205,6 +210,7 @@ export default function Board({ projectId }: BoardProps) {
         <CardModal
           card={selectedCard}
           projectId={projectId}
+          workspaceId={workspaceId}
           onClose={() => setSelectedCard(null)}
           onUpdateCard={(data) => updateCard.mutateAsync({ ...data, projectId })}
           onDeleteCard={(cardId) => deleteCard.mutateAsync({ cardId, projectId })}

@@ -103,7 +103,7 @@ export default function BoardPage() {
         }
       />
       <div className="flex-1 overflow-hidden">
-        <Board projectId={projectId} />
+        <Board projectId={projectId} workspaceId={workspaceId} />
       </div>
     </>
   )

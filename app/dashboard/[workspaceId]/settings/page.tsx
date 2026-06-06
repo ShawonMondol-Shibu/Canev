@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Trash2, Save, UserMinus, UserPlus } from "lucide-react"
+import { ArrowLeft, Trash2, Save, UserMinus } from "lucide-react"
 import Navbar from "@/components/dashboard/navbar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -11,6 +11,7 @@ import { useWorkspaceMembers, useAddWorkspaceMember, useUpdateWorkspaceMember, u
 import { useDeleteWorkspace } from "@/hooks/use-workspaces"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar } from "@/components/ui/avatar"
+import { Can } from "@/components/shared/can"
 
 export default function WorkspaceSettingsPage() {
   const params = useParams()
@@ -75,29 +76,31 @@ export default function WorkspaceSettingsPage() {
               <Skeleton className="h-20 w-full rounded-md" />
             </div>
           ) : (
-            <div className="space-y-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium">Workspace Name</label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
-                />
+            <Can role="admin" workspaceId={workspaceId}>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Workspace Name</label>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Description</label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
+                    rows={3}
+                  />
+                </div>
+                <Button onClick={handleSave} disabled={updateWorkspace.isPending}>
+                  <Save className="mr-1.5 size-4" />
+                  {updateWorkspace.isPending ? "Saving..." : "Save Changes"}
+                </Button>
               </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium">Description</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
-                  rows={3}
-                />
-              </div>
-              <Button onClick={handleSave} disabled={updateWorkspace.isPending}>
-                <Save className="mr-1.5 size-4" />
-                {updateWorkspace.isPending ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
+            </Can>
           )}
 
           <Separator />
@@ -132,29 +135,31 @@ export default function WorkspaceSettingsPage() {
                         <p className="text-xs text-muted-foreground capitalize">{member.role}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {member.role !== "owner" && (
-                        <>
-                          <select
-                            value={member.role}
-                            onChange={(e) =>
-                              updateMember.mutate({ memberId: member.id, role: e.target.value as any, workspaceId })
-                            }
-                            className="rounded-md border bg-transparent px-2 py-1 text-xs outline-none"
-                          >
-                            <option value="admin">Admin</option>
-                            <option value="member">Member</option>
-                            <option value="viewer">Viewer</option>
-                          </select>
-                          <button
-                            onClick={() => removeMember.mutate({ memberId: member.id, workspaceId })}
-                            className="rounded-md p-1.5 text-muted-foreground hover:text-destructive"
-                          >
-                            <UserMinus className="size-4" />
-                          </button>
-                        </>
-                      )}
-                    </div>
+                    <Can role="admin" workspaceId={workspaceId}>
+                      <div className="flex items-center gap-2">
+                        {member.role !== "owner" && (
+                          <>
+                            <select
+                              value={member.role}
+                              onChange={(e) =>
+                                updateMember.mutate({ memberId: member.id, role: e.target.value as any, workspaceId })
+                              }
+                              className="rounded-md border bg-transparent px-2 py-1 text-xs outline-none"
+                            >
+                              <option value="admin">Admin</option>
+                              <option value="member">Member</option>
+                              <option value="viewer">Viewer</option>
+                            </select>
+                            <button
+                              onClick={() => removeMember.mutate({ memberId: member.id, workspaceId })}
+                              className="rounded-md p-1.5 text-muted-foreground hover:text-destructive"
+                            >
+                              <UserMinus className="size-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </Can>
                   </div>
                 ))}
               </div>
@@ -163,16 +168,18 @@ export default function WorkspaceSettingsPage() {
 
           <Separator />
 
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-destructive">Danger Zone</h3>
-            <p className="text-sm text-muted-foreground">
-              Once you delete a workspace, there is no going back. Please be certain.
-            </p>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleteWorkspace.isPending}>
-              <Trash2 className="mr-1.5 size-4" />
-              {deleteWorkspace.isPending ? "Deleting..." : "Delete Workspace"}
-            </Button>
-          </div>
+          <Can role="owner" workspaceId={workspaceId}>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-destructive">Danger Zone</h3>
+              <p className="text-sm text-muted-foreground">
+                Once you delete a workspace, there is no going back. Please be certain.
+              </p>
+              <Button variant="destructive" onClick={handleDelete} disabled={deleteWorkspace.isPending}>
+                <Trash2 className="mr-1.5 size-4" />
+                {deleteWorkspace.isPending ? "Deleting..." : "Delete Workspace"}
+              </Button>
+            </div>
+          </Can>
         </div>
       </div>
     </>
