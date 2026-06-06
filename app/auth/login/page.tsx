@@ -37,7 +37,6 @@ export default function LoginPage() {
       email: data.email,
       password: data.password,
       callbackURL: "/dashboard",
-      
     })
     
   }

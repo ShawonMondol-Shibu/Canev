@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { api } from "@/lib/api"
 import type { List, Card } from "@/lib/types"
 
@@ -89,7 +90,11 @@ export function useCreateList() {
       })
       return result[0]
     },
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["board", vars.projectId] }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["board", vars.projectId] })
+      toast.success("List created")
+    },
+    onError: () => toast.error("Failed to create list"),
   })
 }
 
@@ -104,7 +109,11 @@ export function useCreateCard() {
       })
       return result[0]
     },
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["board", vars.projectId] }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["board", vars.projectId] })
+      toast.success("Card created")
+    },
+    onError: () => toast.error("Failed to create card"),
   })
 }
 
@@ -112,13 +121,16 @@ export function useMoveCard() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (data: { cardId: string; targetListId: string; position: number; projectId: string }) => {
-      const result = await api.put<ApiCard>(`/cards/${data.cardId}`, {
+      return api.put<ApiCard>(`/cards/${data.cardId}`, {
         listId: data.targetListId,
         position: data.position,
       })
-      return result
     },
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["board", vars.projectId] }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["board", vars.projectId] })
+      toast.success("Card moved")
+    },
+    onError: () => toast.error("Failed to move card"),
   })
 }
 
@@ -129,13 +141,17 @@ export function useReorderLists() {
       if (data.listIds) {
         await Promise.all(
           data.listIds.map((id, i) =>
-            api.put(`/lists/${id}`, { position: i }),
+            api.put(`/lists/${id}?projectId=${data.projectId}`, { position: i }),
           ),
         )
       }
       return data
     },
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["board", vars.projectId] }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["board", vars.projectId] })
+      toast.success("Lists reordered")
+    },
+    onError: () => toast.error("Failed to reorder lists"),
   })
 }
 
@@ -144,10 +160,13 @@ export function useUpdateCard() {
   return useMutation({
     mutationFn: async (data: Partial<Card> & { id: string; projectId: string }) => {
       const { projectId, ...updates } = data
-      const result = await api.put<ApiCard>(`/cards/${data.id}`, updates)
-      return result
+      return api.put<ApiCard>(`/cards/${data.id}`, updates)
     },
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["board", vars.projectId] }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["board", vars.projectId] })
+      toast.success("Card updated")
+    },
+    onError: () => toast.error("Failed to update card"),
   })
 }
 
@@ -158,6 +177,10 @@ export function useDeleteCard() {
       await api.delete(`/cards/${data.cardId}`)
       return data
     },
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["board", vars.projectId] }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["board", vars.projectId] })
+      toast.success("Card deleted")
+    },
+    onError: () => toast.error("Failed to delete card"),
   })
 }

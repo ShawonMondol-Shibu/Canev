@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { api } from "@/lib/api"
 import type { Project } from "@/lib/types"
 
@@ -43,11 +44,15 @@ export function useCreateProject() {
     mutationFn: async (data: { workspaceId: string; name: string; description?: string }) => {
       return api.post<ApiProject[]>("/projects", {
         name: data.name,
-        description: data.description || null,
+        description: data.description || undefined,
         workspaceId: data.workspaceId,
       })
     },
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["projects", vars.workspaceId] }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["projects", vars.workspaceId] })
+      toast.success("Project created")
+    },
+    onError: () => toast.error("Failed to create project"),
   })
 }
 
@@ -55,9 +60,13 @@ export function useDeleteProject() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (data: { id: string; workspaceId: string }) => {
-      await api.delete(`/projects/${data.id}`)
+      await api.delete(`/projects/${data.id}?workspaceId=${data.workspaceId}`)
       return data
     },
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["projects", vars.workspaceId] }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["projects", vars.workspaceId] })
+      toast.success("Project deleted")
+    },
+    onError: () => toast.error("Failed to delete project"),
   })
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { api } from "@/lib/api"
 import type { Workspace } from "@/lib/types"
 
@@ -24,10 +25,7 @@ interface ApiMember {
 }
 
 async function fetchWorkspaces(): Promise<Workspace[]> {
-  const [workspaces, members] = await Promise.all([
-    api.get<ApiWorkspace[]>("/workspaces"),
-    api.get<ApiMember[]>("/workspace-members?workspaceId=").catch(() => [] as ApiMember[]),
-  ])
+  const workspaces = await api.get<ApiWorkspace[]>("/workspaces")
 
   return workspaces.map((ws) => ({
     id: ws.id,
@@ -36,19 +34,11 @@ async function fetchWorkspaces(): Promise<Workspace[]> {
     ownerId: ws.ownerId,
     createdAt: new Date(ws.createdAt),
     updatedAt: new Date(ws.updatedAt),
-    members: members
-      .filter((m) => m.workspaceId === ws.id)
-      .map((m) => ({
-        id: m.id,
-        userId: m.userId,
-        workspaceId: m.workspaceId,
-        role: m.role,
-        user: { id: m.userId, name: "", email: "", image: null },
-      })),
+    members: [],
     projects: [],
     _count: {
       projects: 0,
-      members: members.filter((m) => m.workspaceId === ws.id).length,
+      members: 0,
     },
   }))
 }
@@ -100,10 +90,14 @@ export function useCreateWorkspace() {
       return api.post<ApiWorkspace[]>("/workspaces", {
         name: data.name,
         slug: data.slug || data.name.toLowerCase().replace(/\s+/g, "-"),
-        description: data.description || null,
+        description: data.description || undefined,
       })
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["workspaces"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["workspaces"] })
+      toast.success("Workspace created")
+    },
+    onError: () => toast.error("Failed to create workspace"),
   })
 }
 
@@ -114,6 +108,10 @@ export function useDeleteWorkspace() {
       await api.delete(`/workspaces/${id}`)
       return id
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["workspaces"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["workspaces"] })
+      toast.success("Workspace deleted")
+    },
+    onError: () => toast.error("Failed to delete workspace"),
   })
 }

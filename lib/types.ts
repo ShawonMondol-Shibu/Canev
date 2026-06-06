@@ -54,6 +54,7 @@ export interface Card {
   assigneeId: string | null;
   dueDate: Date | null;
   priority: "none" | "low" | "medium" | "high" | "urgent";
+  version?: number;
   createdAt: Date;
   updatedAt: Date;
   assignee: User | null;
@@ -68,21 +69,66 @@ export interface Comment {
   cardId: string;
   userId: string;
   createdAt: Date;
-  user: User;
+  updatedAt: Date;
+  deletedAt?: string | null;
 }
 
 export interface Attachment {
   id: string;
   url: string;
+  publicId: string;
   name: string;
   cardId: string;
   userId: string;
+  mimeType: string | null;
+  size: number | null;
   createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: string | null;
 }
 
 export interface Label {
   id: string;
   name: string;
   color: string;
+  workspaceId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface CardLabel {
   cardId: string;
+  labelId: string;
+  label?: Label;
+}
+
+export interface ActivityLog {
+  id: string;
+  action: "created" | "updated" | "deleted" | "moved" | "assigned" | "unassigned" | "renamed" | "commented" | "uploaded";
+  entityType: "workspace" | "project" | "list" | "card" | "comment" | "attachment";
+  entityId: string;
+  workspaceId: string;
+  userId: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: Date;
+}
+
+export interface Checklist {
+  id: string;
+  cardId: string;
+  title: string;
+  position: number;
+  items: ChecklistItem[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ChecklistItem {
+  id: string;
+  checklistId: string;
+  content: string;
+  isCompleted: number;
+  position: number;
+  createdAt: Date;
+  updatedAt: Date;
 }

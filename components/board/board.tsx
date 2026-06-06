@@ -23,7 +23,7 @@ import BoardColumn from "./board-column"
 import BoardCard from "./board-card"
 import CardModal from "./card-modal"
 import { Plus } from "lucide-react"
-import { useBoard, useCreateList, useMoveCard, useReorderLists } from "@/hooks/use-board"
+import { useBoard, useCreateList, useMoveCard, useReorderLists, useDeleteCard, useUpdateCard } from "@/hooks/use-board"
 
 interface BoardProps {
   projectId: string
@@ -34,6 +34,8 @@ export default function Board({ projectId }: BoardProps) {
   const createList = useCreateList()
   const moveCard = useMoveCard()
   const reorderLists = useReorderLists()
+  const deleteCard = useDeleteCard()
+  const updateCard = useUpdateCard()
 
   const [activeCard, setActiveCard] = useState<Card | null>(null)
   const [activeList, setActiveList] = useState<List | null>(null)
@@ -200,7 +202,13 @@ export default function Board({ projectId }: BoardProps) {
       </DndContext>
 
       {selectedCard && (
-        <CardModal card={selectedCard} onClose={() => setSelectedCard(null)} />
+        <CardModal
+          card={selectedCard}
+          projectId={projectId}
+          onClose={() => setSelectedCard(null)}
+          onUpdateCard={(data) => updateCard.mutateAsync({ ...data, projectId })}
+          onDeleteCard={(cardId) => deleteCard.mutateAsync({ cardId, projectId })}
+        />
       )}
     </>
   )

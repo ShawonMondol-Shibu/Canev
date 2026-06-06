@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { api } from "@/lib/api"
 import type { WorkspaceMember } from "@/lib/types"
 
@@ -46,7 +47,9 @@ export function useAddWorkspaceMember() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["workspace-members", vars.workspaceId] })
       qc.invalidateQueries({ queryKey: ["workspaces"] })
+      toast.success("Member added")
     },
+    onError: () => toast.error("Failed to add member"),
   })
 }
 
@@ -59,7 +62,9 @@ export function useUpdateWorkspaceMember() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["workspace-members", vars.workspaceId] })
       qc.invalidateQueries({ queryKey: ["workspaces"] })
+      toast.success("Member role updated")
     },
+    onError: () => toast.error("Failed to update member role"),
   })
 }
 
@@ -73,7 +78,9 @@ export function useRemoveWorkspaceMember() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["workspace-members", vars.workspaceId] })
       qc.invalidateQueries({ queryKey: ["workspaces"] })
+      toast.success("Member removed")
     },
+    onError: () => toast.error("Failed to remove member"),
   })
 }
 
@@ -81,15 +88,17 @@ export function useUpdateWorkspace() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (data: { workspaceId: string; name?: string; description?: string | null }) => {
-          return api.put<ApiWorkspace>(`/workspaces/${data.workspaceId}`, {
-        name: data.name,
-        description: data.description,
-      })
+      const body: Record<string, string | undefined> = {}
+      if (data.name) body.name = data.name
+      if (data.description !== undefined) body.description = data.description || undefined
+      return api.put<ApiWorkspace>(`/workspaces/${data.workspaceId}`, body)
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["workspaces", vars.workspaceId] })
       qc.invalidateQueries({ queryKey: ["workspaces"] })
+      toast.success("Workspace updated")
     },
+    onError: () => toast.error("Failed to update workspace"),
   })
 }
 

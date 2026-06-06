@@ -9,6 +9,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import QueryProvider from "@/provider/QueryProvider";
 import { AuthHydrator } from "@/store/AuthHydrator";
+import { Toaster } from "sonner";
 
 const playfairDisplayHeading = Playfair_Display({
   subsets: ["latin"],
@@ -55,6 +56,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthHydrator>{children}</AuthHydrator>
         </QueryProvider>
+        <Toaster richColors />
       </body>
     </html>
   );
