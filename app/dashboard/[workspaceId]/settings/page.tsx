@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Trash2, Save, UserMinus } from "lucide-react"
+import { ArrowLeft, Trash2, Save, UserMinus, Plus, X } from "lucide-react"
 import Navbar from "@/components/dashboard/navbar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -29,6 +29,9 @@ export default function WorkspaceSettingsPage() {
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [initialized, setInitialized] = useState(false)
+  const [showAdd, setShowAdd] = useState(false)
+  const [newUserId, setNewUserId] = useState("")
+  const [newRole, setNewRole] = useState<"member" | "admin" | "viewer">("member")
 
   if (!initialized && workspace) {
     setName(workspace.name)
@@ -113,6 +116,12 @@ export default function WorkspaceSettingsPage() {
                   {members?.length || 0} member{(members?.length || 0) !== 1 ? "s" : ""}
                 </p>
               </div>
+              <Can role="admin" workspaceId={workspaceId}>
+                <Button size="sm" onClick={() => setShowAdd(true)}>
+                  <Plus className="mr-1 size-3.5" />
+                  Add Member
+                </Button>
+              </Can>
             </div>
 
             {membersLoading ? (
@@ -165,6 +174,59 @@ export default function WorkspaceSettingsPage() {
               </div>
             )}
           </div>
+
+          {showAdd && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div className="fixed inset-0 bg-black/50" onClick={() => setShowAdd(false)} />
+              <div className="relative z-50 w-full max-w-md rounded-lg bg-background p-6 shadow-xl">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Add Member</h3>
+                  <button onClick={() => setShowAdd(false)} className="rounded-md p-1 text-muted-foreground hover:bg-muted">
+                    <X className="size-4" />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">User ID</label>
+                    <input
+                      autoFocus
+                      value={newUserId}
+                      onChange={(e) => setNewUserId(e.target.value)}
+                      placeholder="Enter the user's ID"
+                      className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">Role</label>
+                    <select
+                      value={newRole}
+                      onChange={(e) => setNewRole(e.target.value as any)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="member">Member</option>
+                      <option value="admin">Admin</option>
+                      <option value="viewer">Viewer</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                  <Button variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
+                  <Button
+                    onClick={async () => {
+                      if (!newUserId.trim()) return
+                      await addMember.mutateAsync({ workspaceId, userId: newUserId.trim(), role: newRole })
+                      setNewUserId("")
+                      setNewRole("member")
+                      setShowAdd(false)
+                    }}
+                    disabled={!newUserId.trim() || addMember.isPending}
+                  >
+                    {addMember.isPending ? "Adding..." : "Add"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <Separator />
 
