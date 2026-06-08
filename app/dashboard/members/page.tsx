@@ -95,7 +95,7 @@ export default function MembersPage() {
                         <label className="mb-1 block text-sm font-medium">Role</label>
                         <select
                           value={newRole}
-                          onChange={(e) => setNewRole(e.target.value as any)}
+                          onChange={(e) => setNewRole(e.target.value as "member" | "admin" | "viewer")}
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                         >
                           <option value="member">Member</option>
@@ -156,7 +156,7 @@ export default function MembersPage() {
                                 <select
                                   value={member.role}
                                   onChange={(e) =>
-                                    updateMember.mutate({ memberId: member.id, role: e.target.value as any, workspaceId })
+                                    updateMember.mutate({ memberId: member.id, role: e.target.value as "owner" | "admin" | "member" | "viewer", workspaceId })
                                   }
                                   className="rounded-md border bg-transparent px-2 py-1 text-xs outline-none"
                                 >
