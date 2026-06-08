@@ -31,6 +31,12 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 
 > The backend API runs on `http://localhost:3000`. Make sure it's running as well.
 
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NEXT_PUBLIC_API_URL` | `http://localhost:3000` | Backend API base URL |
+
 ## Project Structure
 
 ```

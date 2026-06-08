@@ -29,14 +29,18 @@ export default function BoardColumn({ list, projectId, workspaceId, canEdit, onC
 
   async function handleAddCard() {
     if (!cardTitle.trim()) return
-    await createCard.mutateAsync({ listId: list.id, title: cardTitle.trim(), projectId })
-    setCardTitle("")
-    setShowAddCard(false)
+    try {
+      await createCard.mutateAsync({ listId: list.id, title: cardTitle.trim(), projectId })
+      setCardTitle("")
+      setShowAddCard(false)
+    } catch {
+      // Error toast is handled by useCreateCard onError
+    }
   }
 
   return (
     <div className="flex w-72 shrink-0 flex-col rounded-lg bg-muted/50">
-      <div className="flex items-center gap-2 px-3 py-3" ref={setNodeRef}>
+      <div className="flex items-center gap-2 px-3 py-3">
         {canEdit && <GripVertical className="size-3.5 shrink-0 text-muted-foreground/30 cursor-grab" />}
         <h3 className="text-sm font-semibold">{list.name}</h3>
         <span className="ml-auto flex size-5 items-center justify-center rounded-full bg-muted text-[11px] font-medium text-muted-foreground">

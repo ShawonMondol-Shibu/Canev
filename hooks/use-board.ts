@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { api } from "@/lib/api"
+import { api, ApiError } from "@/lib/api"
 import type { List, Card } from "@/lib/types"
 
 interface ApiList {
@@ -113,7 +113,7 @@ export function useCreateCard() {
       qc.invalidateQueries({ queryKey: ["board", vars.projectId] })
       toast.success("Card created")
     },
-    onError: () => toast.error("Failed to create card"),
+    onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to create card"),
   })
 }
 
