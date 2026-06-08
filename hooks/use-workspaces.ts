@@ -22,6 +22,9 @@ interface ApiMember {
   userId: string
   role: "owner" | "admin" | "member" | "viewer"
   joinedAt: string
+  userEmail: string | null
+  userName: string | null
+  userImage: string | null
 }
 
 async function fetchWorkspaces(): Promise<Workspace[]> {
@@ -61,7 +64,7 @@ async function fetchWorkspace(id: string): Promise<Workspace> {
       userId: m.userId,
       workspaceId: m.workspaceId,
       role: m.role,
-      user: { id: m.userId, name: "", email: "", image: null },
+      user: { id: m.userId, name: m.userName || "", email: m.userEmail || "", image: m.userImage },
     })),
     projects: [],
     _count: { projects: 0, members: members.length },

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { api } from "@/lib/api"
+import { api, ApiError } from "@/lib/api"
 import type { WorkspaceMember } from "@/lib/types"
 
 interface ApiMember {
@@ -11,6 +11,9 @@ interface ApiMember {
   userId: string
   role: "owner" | "admin" | "member" | "viewer"
   joinedAt: string
+  userEmail: string | null
+  userName: string | null
+  userImage: string | null
 }
 
 function mapMember(m: ApiMember): WorkspaceMember {
@@ -19,7 +22,7 @@ function mapMember(m: ApiMember): WorkspaceMember {
     userId: m.userId,
     workspaceId: m.workspaceId,
     role: m.role,
-    user: { id: m.userId, name: "", email: "", image: null },
+    user: { id: m.userId, name: m.userName || "", email: m.userEmail || "", image: m.userImage },
   }
 }
 
@@ -37,10 +40,10 @@ export function useWorkspaceMembers(workspaceId: string) {
 export function useAddWorkspaceMember() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { workspaceId: string; userId: string; role?: "owner" | "admin" | "member" | "viewer" }) => {
+    mutationFn: async (data: { workspaceId: string; email: string; role?: "owner" | "admin" | "member" | "viewer" }) => {
       return api.post<ApiMember[]>("/workspace-members", {
         workspaceId: data.workspaceId,
-        userId: data.userId,
+        email: data.email,
         role: data.role || "member",
       })
     },
@@ -49,7 +52,7 @@ export function useAddWorkspaceMember() {
       qc.invalidateQueries({ queryKey: ["workspaces"] })
       toast.success("Member added")
     },
-    onError: () => toast.error("Failed to add member"),
+    onError: (err) => toast.error(err instanceof ApiError ? err.message : "Failed to add member"),
   })
 }
 
