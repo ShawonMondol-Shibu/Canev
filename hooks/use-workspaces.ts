@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { api } from "@/lib/api"
-import type { Workspace } from "@/lib/types"
+import type { Workspace, WorkspaceMember } from "@/lib/types"
 
 interface ApiWorkspace {
   id: string
@@ -14,6 +14,12 @@ interface ApiWorkspace {
   createdAt: string
   updatedAt: string
   deletedAt: string | null
+  _count: { members: number }
+  members: {
+    id: string
+    role: string
+    user: { id: string; name: string; email: string; image: string | null }
+  }[]
 }
 
 interface ApiMember {
@@ -37,11 +43,17 @@ async function fetchWorkspaces(): Promise<Workspace[]> {
     ownerId: ws.ownerId,
     createdAt: new Date(ws.createdAt),
     updatedAt: new Date(ws.updatedAt),
-    members: [],
+    members: (ws.members || []).map((m) => ({
+      id: m.id,
+      userId: m.user.id,
+      workspaceId: ws.id,
+      role: m.role as WorkspaceMember["role"],
+      user: { id: m.user.id, name: m.user.name, email: m.user.email, image: m.user.image },
+    })),
     projects: [],
     _count: {
       projects: 0,
-      members: 0,
+      members: ws._count?.members ?? 0,
     },
   }))
 }
