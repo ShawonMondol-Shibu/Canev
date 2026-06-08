@@ -30,7 +30,7 @@ export default function WorkspaceSettingsPage() {
   const [description, setDescription] = useState("")
   const [initialized, setInitialized] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
-  const [newUserId, setNewUserId] = useState("")
+  const [newEmail, setNewEmail] = useState("")
   const [newRole, setNewRole] = useState<"member" | "admin" | "viewer">("member")
 
   if (!initialized && workspace) {
@@ -151,7 +151,7 @@ export default function WorkspaceSettingsPage() {
                             <select
                               value={member.role}
                               onChange={(e) =>
-                                updateMember.mutate({ memberId: member.id, role: e.target.value as any, workspaceId })
+                                updateMember.mutate({ memberId: member.id, role: e.target.value as "owner" | "admin" | "member" | "viewer", workspaceId })
                               }
                               className="rounded-md border bg-transparent px-2 py-1 text-xs outline-none"
                             >
@@ -187,12 +187,13 @@ export default function WorkspaceSettingsPage() {
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="mb-1 block text-sm font-medium">User ID</label>
+                    <label className="mb-1 block text-sm font-medium">Email</label>
                     <input
                       autoFocus
-                      value={newUserId}
-                      onChange={(e) => setNewUserId(e.target.value)}
-                      placeholder="Enter the user's ID"
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="Enter the user's email"
                       className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
                     />
                   </div>
@@ -200,7 +201,7 @@ export default function WorkspaceSettingsPage() {
                     <label className="mb-1 block text-sm font-medium">Role</label>
                     <select
                       value={newRole}
-                      onChange={(e) => setNewRole(e.target.value as any)}
+                      onChange={(e) => setNewRole(e.target.value as "member" | "admin" | "viewer")}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                     >
                       <option value="member">Member</option>
@@ -213,13 +214,13 @@ export default function WorkspaceSettingsPage() {
                   <Button variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
                   <Button
                     onClick={async () => {
-                      if (!newUserId.trim()) return
-                      await addMember.mutateAsync({ workspaceId, userId: newUserId.trim(), role: newRole })
-                      setNewUserId("")
+                      if (!newEmail.trim()) return
+                      await addMember.mutateAsync({ workspaceId, email: newEmail.trim(), role: newRole })
+                      setNewEmail("")
                       setNewRole("member")
                       setShowAdd(false)
                     }}
-                    disabled={!newUserId.trim() || addMember.isPending}
+                    disabled={!newEmail.trim() || addMember.isPending}
                   >
                     {addMember.isPending ? "Adding..." : "Add"}
                   </Button>
