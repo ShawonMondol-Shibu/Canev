@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { MoreHorizontal, FolderKanban, Users, X } from "lucide-react"
+import { MoreHorizontal, FolderKanban, Users, X, Loader2 } from "lucide-react"
 import type { Workspace } from "@/lib/types"
 import { AvatarGroup } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,6 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { cn } from "@/lib/utils"
 import { useUpdateWorkspace } from "@/hooks/use-members"
 import { useDeleteWorkspace, useCreateWorkspace } from "@/hooks/use-workspaces"
-import { toast } from "sonner"
 
 interface WorkspaceCardProps {
   workspace: Workspace
@@ -53,9 +52,8 @@ export default function WorkspaceCard({ workspace }: WorkspaceCardProps) {
     setShowDelete(false)
   }
 
-  async function handleDuplicate() {
-    const name = `${workspace.name} (copy)`
-    await createWorkspace.mutateAsync({ name, description: workspace.description || undefined })
+  function handleDuplicate() {
+    createWorkspace.mutate({ name: `${workspace.name} (copy)`, description: workspace.description || undefined })
   }
 
   const cardContent = (
@@ -132,6 +130,7 @@ export default function WorkspaceCard({ workspace }: WorkspaceCardProps) {
             <div className="mt-6 flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowRename(false)}>Cancel</Button>
               <Button onClick={handleRename} disabled={!renameValue.trim() || updateWorkspace.isPending}>
+                {updateWorkspace.isPending ? <Loader2 className="size-3.5 animate-spin" /> : null}
                 {updateWorkspace.isPending ? "Saving..." : "Save"}
               </Button>
             </div>
@@ -150,6 +149,7 @@ export default function WorkspaceCard({ workspace }: WorkspaceCardProps) {
             <div className="mt-6 flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowDelete(false)}>Cancel</Button>
               <Button variant="destructive" onClick={handleDelete} disabled={deleteWorkspace.isPending}>
+                {deleteWorkspace.isPending ? <Loader2 className="size-3.5 animate-spin" /> : null}
                 {deleteWorkspace.isPending ? "Deleting..." : "Delete"}
               </Button>
             </div>
