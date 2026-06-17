@@ -26,25 +26,11 @@ function getColor(id: string) {
 }
 
 export default function WorkspaceCard({ workspace }: WorkspaceCardProps) {
-  return (
-    <Link
-      href={`/dashboard/${workspace.id}`}
-      className="group relative flex flex-col overflow-hidden rounded-lg border bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
-    >
+  const cardContent = (
+    <>
       <div className={cn("h-20 bg-gradient-to-br p-4", getColor(workspace.id))}>
         <div className="flex items-start justify-between">
           <h3 className="text-lg font-bold text-white drop-shadow-sm">{workspace.name}</h3>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="rounded-md p-1 text-white/80 hover:bg-white/20">
-              <MoreHorizontal className="size-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="relative">
-              <DropdownMenuItem>Rename</DropdownMenuItem>
-              <DropdownMenuItem>Duplicate</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
       <div className="flex flex-1 flex-col gap-3 p-4">
@@ -69,6 +55,28 @@ export default function WorkspaceCard({ workspace }: WorkspaceCardProps) {
           />
         </div>
       </div>
-    </Link>
+    </>
+  )
+
+  return (
+    <div className="group relative flex flex-col overflow-hidden rounded-lg border bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+      <Link
+        href={`/dashboard/${workspace.id}`}
+        className="absolute inset-0 z-0"
+        aria-label={workspace.name}
+      />
+      <DropdownMenu>
+        <DropdownMenuTrigger className="absolute right-2 top-2 z-10 rounded-md p-1.5 text-white/80 hover:bg-white/20">
+          <MoreHorizontal className="size-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem>Rename</DropdownMenuItem>
+          <DropdownMenuItem>Duplicate</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {cardContent}
+    </div>
   )
 }
