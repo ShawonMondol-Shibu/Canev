@@ -1,11 +1,16 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
-import { MoreHorizontal, FolderKanban, Users } from "lucide-react"
+import { MoreHorizontal, FolderKanban, Users, X } from "lucide-react"
 import type { Workspace } from "@/lib/types"
 import { AvatarGroup } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { useUpdateWorkspace } from "@/hooks/use-members"
+import { useDeleteWorkspace, useCreateWorkspace } from "@/hooks/use-workspaces"
+import { toast } from "sonner"
 
 interface WorkspaceCardProps {
   workspace: Workspace
@@ -26,6 +31,33 @@ function getColor(id: string) {
 }
 
 export default function WorkspaceCard({ workspace }: WorkspaceCardProps) {
+  const [showRename, setShowRename] = useState(false)
+  const [renameValue, setRenameValue] = useState(workspace.name)
+  const [showDelete, setShowDelete] = useState(false)
+
+  const updateWorkspace = useUpdateWorkspace()
+  const deleteWorkspace = useDeleteWorkspace()
+  const createWorkspace = useCreateWorkspace()
+
+  async function handleRename() {
+    if (!renameValue.trim() || renameValue.trim() === workspace.name) {
+      setShowRename(false)
+      return
+    }
+    await updateWorkspace.mutateAsync({ workspaceId: workspace.id, name: renameValue.trim() })
+    setShowRename(false)
+  }
+
+  async function handleDelete() {
+    await deleteWorkspace.mutateAsync(workspace.id)
+    setShowDelete(false)
+  }
+
+  async function handleDuplicate() {
+    const name = `${workspace.name} (copy)`
+    await createWorkspace.mutateAsync({ name, description: workspace.description || undefined })
+  }
+
   const cardContent = (
     <>
       <div className={cn("h-20 bg-gradient-to-br p-4", getColor(workspace.id))}>
@@ -59,24 +91,71 @@ export default function WorkspaceCard({ workspace }: WorkspaceCardProps) {
   )
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-lg border bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
-      <Link
-        href={`/dashboard/${workspace.id}`}
-        className="absolute inset-0 z-0"
-        aria-label={workspace.name}
-      />
-      <DropdownMenu>
-        <DropdownMenuTrigger className="absolute right-2 top-2 z-10 rounded-md p-1.5 text-white/80 hover:bg-white/20">
-          <MoreHorizontal className="size-4" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem>Rename</DropdownMenuItem>
-          <DropdownMenuItem>Duplicate</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {cardContent}
-    </div>
+    <>
+      <div className="group relative flex flex-col overflow-hidden rounded-lg border bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+        <Link
+          href={`/dashboard/${workspace.id}`}
+          className="absolute inset-0 z-0"
+          aria-label={workspace.name}
+        />
+        <DropdownMenu>
+          <DropdownMenuTrigger className="absolute right-2 top-2 z-10 rounded-md p-1.5 text-white/80 hover:bg-white/20">
+            <MoreHorizontal className="size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => { setRenameValue(workspace.name); setShowRename(true) }}>Rename</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDuplicate}>Duplicate</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive" onClick={() => setShowDelete(true)}>Delete</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {cardContent}
+      </div>
+
+      {showRename && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setShowRename(false)} />
+          <div className="relative z-50 w-full max-w-md rounded-lg bg-background p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Rename Workspace</h3>
+              <button onClick={() => setShowRename(false)} className="rounded-md p-1 text-muted-foreground hover:bg-muted">
+                <X className="size-4" />
+              </button>
+            </div>
+            <input
+              autoFocus
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:border-primary"
+              onKeyDown={(e) => e.key === "Enter" && handleRename()}
+            />
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowRename(false)}>Cancel</Button>
+              <Button onClick={handleRename} disabled={!renameValue.trim() || updateWorkspace.isPending}>
+                {updateWorkspace.isPending ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setShowDelete(false)} />
+          <div className="relative z-50 w-full max-w-md rounded-lg bg-background p-6 shadow-xl">
+            <h3 className="text-lg font-semibold">Delete Workspace</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Are you sure you want to delete <strong>{workspace.name}</strong>? This action cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowDelete(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={deleteWorkspace.isPending}>
+                {deleteWorkspace.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
